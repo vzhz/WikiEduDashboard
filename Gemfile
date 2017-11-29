@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 ruby '2.3.1'
-gem 'rails', '5.1.4'
+gem 'rails', '5.2.0.beta2'
 gem 'jbuilder', '~> 2.0'
 gem 'haml-rails'
 
