@@ -11,6 +11,7 @@ import notifications from './notifications';
 import revisions from './revisions';
 import ui from './ui';
 import userCourses from './user_courses';
+import validations from './validations';
 
 const reducer = combineReducers({
   articleDetails,
@@ -24,7 +25,8 @@ const reducer = combineReducers({
   notifications,
   revisions,
   ui,
-  userCourses
+  userCourses,
+  validations
 });
 
 export default reducer;

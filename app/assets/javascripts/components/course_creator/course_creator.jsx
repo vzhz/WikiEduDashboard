@@ -5,9 +5,8 @@ import { connect } from "react-redux";
 import { Link } from 'react-router';
 
 import ValidationStore from '../../stores/validation_store.js';
-import ValidationActions from '../../actions/validation_actions.js';
+import { setValid, setInvalid, checkSlugAvailability } from '../../actions/validation_actions.js';
 import { fetchCampaign, updateCourse, submitCourse, cloneCourse } from '../../actions/course_creation_actions.js';
-import ServerActions from '../../actions/server_actions.js';
 import { fetchCoursesForUser } from "../../actions/user_courses_actions.js";
 
 import Notifications from '../common/notifications.jsx';
@@ -74,7 +73,7 @@ const CourseCreator = createReactClass({
     else {
       this.state.tempCourseId = '';
     }
-    return this.handleCourse(nextProps.course);
+    return this.handleCourse(nextProps.course, nextProps.isValid);
   },
 
   campaignParam() {
@@ -91,50 +90,60 @@ const CourseCreator = createReactClass({
   },
 
   saveCourse() {
-    if (ValidationStore.isValid() && this.expectedStudentsIsValid() && this.dateTimesAreValid()) {
+    if (this.props.isValid && !this.state.error_message && this.expectedStudentsIsValid() && this.dateTimesAreValid()) {
       this.setState({ isSubmitting: true });
-      ValidationActions.setInvalid(
+      this.props.setInvalid(
         'exists',
-        CourseUtils.i18n('creator.checking_for_uniqueness', this.state.course_string_prefix),
-        true
+        CourseUtils.i18n('creator.checking_for_uniqueness', this.state.course_string_prefix)
       );
-      return ServerActions.checkCourse('exists', CourseUtils.generateTempId(this.props.course));
+      return this.props.checkSlugAvailability(CourseUtils.generateTempId(this.props.course));
     }
   },
 
-  handleCourse(course) {
-    if (this.state.shouldRedirect === true) {
+  handleCourse(course, isValid) {
+    if (this.state.redirectToClone === true) {
       window.location = `/courses/${course.slug}`;
-      return this.setState({ shouldRedirect: false });
+      return this.setState({ redirectToClone: false });
     }
+
     if (!this.state.isSubmitting && !this.state.justSubmitted) { return; }
-    if (ValidationStore.isValid()) {
-      if (course.slug && this.state.justSubmitted) {
-        // This has to be a window.location set due to our limited ReactJS scope
-        if (this.state.default_course_type === 'ClassroomProgramCourse') {
-          window.location = `/courses/${course.slug}/timeline/wizard`;
-        } else {
-          window.location = `/courses/${course.slug}`;
-        }
-      } else if (!this.state.justSubmitted) {
-        this.setState({ course: CourseUtils.cleanupCourseSlugComponents(course) });
-        this.setState({ isSubmitting: false });
-        this.setState({ justSubmitted: true });
-        // If the save callback fails, which will happen if an invalid wiki is submitted,
-        // then we must reset justSubmitted so that the user can fix the problem
-        // and submit again.
-        const onSaveFailure = () => this.setState({ justSubmitted: false });
-        this.props.submitCourse({ course }, onSaveFailure);
-      }
-    } else if (!ValidationStore.getValidation('exists').valid) {
+
+    // If it's being submitted, or already submitted, and then turns invalid,
+    // then the submission failed. Unset isSubmitting so that the form can be
+    // edited further and resubmitted.
+    if (!isValid) {
+      return this.setState({ isSubmitting: false });
+    }
+
+    // If it's valid and isSubmitting but not justSubmitted, that means the
+    // check for slug availability came back okay, so it's time to submit the course.
+    if (!this.state.justSubmitted) {
+      this.setState({ course: CourseUtils.cleanupCourseSlugComponents(course) });
       this.setState({ isSubmitting: false });
+      this.setState({ justSubmitted: true });
+      // If the save callback fails, which will happen if an invalid wiki is submitted,
+      // then we must reset justSubmitted so that the user can fix the problem
+      // and submit again.
+      const onSaveFailure = () => this.setState({ justSubmitted: false });
+      return this.props.submitCourse({ course }, onSaveFailure);
+    }
+
+    // if it's justSubmitted and now has a slug, that means the course got created
+    // and it's time to redirect to it.
+    if (course.slug && this.state.justSubmitted) {
+      // ClassroomProgramCourse users the wizard, other types do not.
+      if (this.state.default_course_type === 'ClassroomProgramCourse') {
+        window.location = `/courses/${course.slug}/timeline/wizard`;
+      } else {
+        window.location = `/courses/${course.slug}`;
+      }
     }
   },
 
   updateCourse(key, value) {
     this.props.updateCourse({ [key]: value });
     if (_.includes(['title', 'school', 'term'], key)) {
-      return ValidationActions.setValid('exists');
+      return this.props.setValid('exists');
     }
   },
 
@@ -151,7 +160,7 @@ const CourseCreator = createReactClass({
 
   expectedStudentsIsValid() {
     if (this.props.course.expected_students === '0' && this.state.default_course_type === 'ClassroomProgramCourse') {
-      ValidationActions.setInvalid('expected_students', I18n.t('application.field_required'));
+      this.props.setInvalid('expected_students', I18n.t('application.field_required'));
       return false;
     }
     return true;
@@ -162,7 +171,7 @@ const CourseCreator = createReactClass({
     const endDateTime = new Date(this.props.course.end);
 
     if (startDateTime >= endDateTime) {
-      ValidationActions.setInvalid('end', I18n.t('application.field_invalid_date_time'));
+      this.props.setInvalid('end', I18n.t('application.field_invalid_date_time'));
       return false;
     }
     return true;
@@ -184,7 +193,7 @@ const CourseCreator = createReactClass({
     const select = this.courseSelect;
     const courseId = select.options[select.selectedIndex].getAttribute('data-id-key');
     this.props.cloneCourse(courseId);
-    return this.setState({ isSubmitting: true, shouldRedirect: true });
+    return this.setState({ isSubmitting: true, redirectToClone: true });
   },
 
   render() {
@@ -455,7 +464,7 @@ const CourseCreator = createReactClass({
               <div className={controlClass}>
                 <div className="left"><p>{this.state.tempCourseId}</p></div>
                 <div className="right">
-                  <div><p className="red">{this.state.error_message}</p></div>
+                  <div><p className="red">{this.state.error_message || this.props.errorMessage}</p></div>
                   <Link className="button" to="/" id="course_cancel">{I18n.t('application.cancel')}</Link>
                   <button onClick={this.saveCourse} className="dark button button__submit">{CourseUtils.i18n('creator.create_button', this.state.course_string_prefix)}</button>
                 </div>
@@ -471,7 +480,9 @@ const CourseCreator = createReactClass({
 const mapStateToProps = state => ({
   course: state.course,
   courseCreator: state.courseCreator,
-  user_courses: _.reject(state.userCourses.userCourses, { type: "LegacyCourse" })
+  user_courses: _.reject(state.userCourses.userCourses, { type: "LegacyCourse" }),
+  isValid: state.validations.isValid,
+  errorMessage: state.validations.errors[0]
 });
 
 const mapDispatchToProps = ({
@@ -479,7 +490,10 @@ const mapDispatchToProps = ({
   fetchCoursesForUser,
   updateCourse,
   submitCourse,
-  cloneCourse
+  cloneCourse,
+  setValid,
+  setInvalid,
+  checkSlugAvailability
 });
 
 // exporting two difference ways as a testing hack.

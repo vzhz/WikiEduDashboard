@@ -20,7 +20,6 @@ const setValidation = function (key, valid, message, changed = true, quiet = fal
   if (!quiet) { return ValidationStore.emitChange(); }
 };
 
-
 // Store
 const ValidationStore = Flux.createStore(
   {
@@ -35,9 +34,6 @@ const ValidationStore = Flux.createStore(
         valid = valid && _validations[key].valid;
       }
       return valid;
-    },
-    getValidations() {
-      return _validations;
     },
     getValidation(key) {
       if ((_validations[key]) && _validations[key].changed) {

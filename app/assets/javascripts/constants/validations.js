@@ -1,0 +1,3 @@
+export const RECEIVE_COURSE_CHECK = 'RECEIVE_COURSE_CHECK';
+export const SET_VALID = 'SET_VALID';
+export const SET_INVALID = 'SET_INVALID';

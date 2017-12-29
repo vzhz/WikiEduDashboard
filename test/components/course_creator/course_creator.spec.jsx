@@ -4,8 +4,6 @@ import sinon from 'sinon';
 import React from 'react';
 import CourseCreator from '../../../app/assets/javascripts/components/course_creator/course_creator.jsx';
 
-import ValidationActions from '../../../app/assets/javascripts/actions/validation_actions.js';
-import ServerActions from '../../../app/assets/javascripts/actions/server_actions.js';
 import { shallow } from 'enzyme';
 
 CourseCreator.__Rewire__('ValidationStore', {
@@ -30,6 +28,9 @@ const getStyle = (node) => {
 describe('CourseCreator', () => {
   describe('render', () => {
     const updateCourseSpy = sinon.spy();
+    const setValidSpy = sinon.spy();
+    const setInvalidSpy = sinon.spy();
+    const checkCourseSpy = sinon.spy();
 
     const TestCourseCreator = shallow(
       <CourseCreator
@@ -38,6 +39,10 @@ describe('CourseCreator', () => {
         user_courses={["some_course"]}
         course={reduxStore.getState().course}
         updateCourse={updateCourseSpy}
+        setValid={setValidSpy}
+        setInvalid={setInvalidSpy}
+        checkSlugAvailability={checkCourseSpy}
+        isValid={true}
       />
     );
 
@@ -78,8 +83,6 @@ describe('CourseCreator', () => {
     });
     describe('text inputs', () => {
       TestCourseCreator.setState({ default_course_type: 'ClassroomProgramCourse' });
-      const setValidSpy = sinon.spy(ValidationActions, 'setValid');
-
       describe('subject', () => {
         it('updates courseActions', () => {
           TestCourseCreator.instance().updateCourse('subject', 'some subject');
@@ -99,13 +102,11 @@ describe('CourseCreator', () => {
     describe('save course', () => {
       sinon.stub(TestCourseCreator.instance(), 'expectedStudentsIsValid').callsFake(() => true);
       sinon.stub(TestCourseCreator.instance(), 'dateTimesAreValid').callsFake(() => true);
-      const checkCourse = sinon.spy(ServerActions, 'checkCourse');
-      const setInvalid = sinon.spy(ValidationActions, 'setInvalid');
       it('calls the appropriate methods on the actions', () => {
         const button = TestCourseCreator.find('.button__submit');
         button.simulate('click');
-        expect(checkCourse).to.have.been.called;
-        expect(setInvalid).to.have.been.called;
+        expect(checkCourseSpy).to.have.been.called;
+        expect(setInvalidSpy).to.have.been.called;
       });
     });
   });
