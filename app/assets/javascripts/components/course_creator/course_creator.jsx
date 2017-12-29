@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { Link } from 'react-router';
 
 import ValidationStore from '../../stores/validation_store.js';
-import { setValid, setInvalid, checkSlugAvailability } from '../../actions/validation_actions.js';
+import { setValidKey, setInvalidKey, checkSlugAvailability } from '../../actions/validation_actions.js';
 import { fetchCampaign, updateCourse, submitCourse, cloneCourse } from '../../actions/course_creation_actions.js';
 import { fetchCoursesForUser } from "../../actions/user_courses_actions.js";
 
@@ -90,9 +90,10 @@ const CourseCreator = createReactClass({
   },
 
   saveCourse() {
+    if (!ValidationStore.isValid()) { return; }
     if (this.props.isValid && !this.state.error_message && this.expectedStudentsIsValid() && this.dateTimesAreValid()) {
       this.setState({ isSubmitting: true });
-      this.props.setInvalid(
+      this.props.setInvalidKey(
         'exists',
         CourseUtils.i18n('creator.checking_for_uniqueness', this.state.course_string_prefix)
       );
@@ -143,7 +144,7 @@ const CourseCreator = createReactClass({
   updateCourse(key, value) {
     this.props.updateCourse({ [key]: value });
     if (_.includes(['title', 'school', 'term'], key)) {
-      return this.props.setValid('exists');
+      return this.props.setValidKey('exists');
     }
   },
 
@@ -160,7 +161,7 @@ const CourseCreator = createReactClass({
 
   expectedStudentsIsValid() {
     if (this.props.course.expected_students === '0' && this.state.default_course_type === 'ClassroomProgramCourse') {
-      this.props.setInvalid('expected_students', I18n.t('application.field_required'));
+      this.props.setInvalidKey('expected_students', I18n.t('application.field_required'));
       return false;
     }
     return true;
@@ -171,7 +172,7 @@ const CourseCreator = createReactClass({
     const endDateTime = new Date(this.props.course.end);
 
     if (startDateTime >= endDateTime) {
-      this.props.setInvalid('end', I18n.t('application.field_invalid_date_time'));
+      this.props.setInvalidKey('end', I18n.t('application.field_invalid_date_time'));
       return false;
     }
     return true;
@@ -491,8 +492,8 @@ const mapDispatchToProps = ({
   updateCourse,
   submitCourse,
   cloneCourse,
-  setValid,
-  setInvalid,
+  setValidKey,
+  setInvalidKey,
   checkSlugAvailability
 });
 

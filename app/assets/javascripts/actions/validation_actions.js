@@ -3,11 +3,11 @@ const Flux = new McFly();
 import API from '../utils/api.js';
 import { SET_INVALID, SET_VALID, RECEIVE_COURSE_CHECK, API_FAIL } from "../constants";
 
-export const setInvalid = (key, message) => {
+export const setInvalidKey = (key, message) => {
   return { type: SET_INVALID, key, message };
 };
 
-export const setValid = (key) => {
+export const setValidKey = (key) => {
   return { type: SET_VALID, key };
 };
 

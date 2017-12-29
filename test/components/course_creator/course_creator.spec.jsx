@@ -39,8 +39,8 @@ describe('CourseCreator', () => {
         user_courses={["some_course"]}
         course={reduxStore.getState().course}
         updateCourse={updateCourseSpy}
-        setValid={setValidSpy}
-        setInvalid={setInvalidSpy}
+        setValidKey={setValidSpy}
+        setInvalidKey={setInvalidSpy}
         checkSlugAvailability={checkCourseSpy}
         isValid={true}
       />
