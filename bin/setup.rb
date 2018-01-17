@@ -23,7 +23,7 @@ end
 # Install dependencies
 
 run 'sudo apt update'
-run 'sudo apt install -y default-libmysqlclient-dev pandoc curl r-base'
+run 'sudo apt install -y default-libmysqlclient-dev pandoc curl r-base nodejs mariadb-server'
 
 run 'gem install bundler' if `which bundler`.empty?
 run 'bundle install'
@@ -42,6 +42,17 @@ end
 run 'yarn'
 run 'sudo yarn global add phantomjs-prebuilt'
 run 'sudo yarn global add bower'
+run 'sudo yarn global add gulp'
 run 'bower install'
+
+# Rails and database config
+run 'cp config/application.example.yml config/application.yml'
+run 'cp config/database.example.yml config/database.yml'
+
+run 'sudo mysql -e "CREATE DATABASE dashboard DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"'
+run 'sudo mysql -e "CREATE DATABASE dashboard_testing DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"'
+
+# Build assets
+run 'gulp build'
 
 puts 'ohai'
