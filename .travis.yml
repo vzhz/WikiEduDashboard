@@ -26,15 +26,10 @@ before_install:
 - node --version
 - yarn --version
 install:
-- yarn global add gulp
-- yarn global add bower
-- yarn global add phantomjs-prebuilt@latest
+- ruby bin/setup.rb # main setup script
 - yarn global add codeclimate-test-reporter
-- bower install
-- yarn install
-- gem install bundler
 - gem install rubocop
-- bundle install --jobs=3 --retry=3 --deployment
+
 before_script:
 # install Code Climate test reporter
 - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
@@ -42,11 +37,8 @@ before_script:
 - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter before-build; fi
 
 - mkdir tmp -m 777
-- cp config/database.travis.yml config/database.yml
-- sudo mysql -e "CREATE DATABASE test DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
-- bundle exec rake db:migrate RAILS_ENV=test
 script:
-  - gulp build && yarn test && bundle exec rspec --color --profile --format documentation
+  - yarn test && bundle exec rspec --color --profile --format documentation
     --tag $TEST_SUITE
   - rubocop --rails
 after_script:
