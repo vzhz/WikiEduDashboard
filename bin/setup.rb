@@ -58,9 +58,9 @@ end
 
 puts 'Install npm modules via `yarn`...'
 run 'yarn', exit_on_failure: true, silent: true
-run 'sudo yarn global add phantomjs-prebuilt' if `which phantomjs`.empty?
-run 'sudo yarn global add bower' if `which bower`.empty?
-run 'sudo yarn global add gulp' if `which gulp`.empty?
+run 'yarn global add phantomjs-prebuilt' if `which phantomjs`.empty?
+run 'yarn global add bower' if `which bower`.empty?
+run 'yarn global add gulp' if `which gulp`.empty?
 run 'bower install', exit_on_failure: true
 
 # Rails and database config
