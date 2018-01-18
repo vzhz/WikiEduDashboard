@@ -12,38 +12,56 @@ unless actual_ruby.include? "ruby #{REQUIRED_RUBY_VERSION}"
 end
 
 # Utility for printing shell output continuously.
-def run shell_command
+def run shell_command, exit_on_failure: false, silent: false
+  exit_status = nil
+
   IO.popen(shell_command) do |output|
     while line = output.gets do
-      print line
+      print line unless silent
     end
+    output.close
+    exit_status = $?.to_i
   end
+
+  return if exit_status.zero?
+  puts "Error with command: #{shell_command}"
+  return exit_status unless exit_on_failure
+  exit
 end
 
 # Install dependencies
 
-run 'sudo apt update'
-run 'sudo apt install -y default-libmysqlclient-dev pandoc curl r-base nodejs mariadb-server'
+if `which apt`.empty?
+  puts 'Sorry, only Linux distros with `apt` are supported by this script.'
+  exit
+end
+puts 'Installing required debian packages via `apt`...'
+run 'sudo apt-get update', silent: true, exit_on_failure: true
+run 'sudo apt-get install -y default-libmysqlclient-dev pandoc curl r-base nodejs mariadb-server', silent: true
 
+puts 'Installing Ruby gems via `bundler`...'
 run 'gem install bundler' if `which bundler`.empty?
-run 'bundle install'
+run 'bundle install', exit_on_failure: true, silent: true
 
-if `nodejs -v`[0].to_i < 6
+if `nodejs -v`[1].to_i < 6
+  puts 'Installing latest nodejs from nodesource.com...'
   run 'curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -'
-  run 'sudo apt install -y nodejs'
+  run 'sudo apt-get install -y nodejs'
 end
 
 if `which yarn`.empty?
+  puts 'Installing yarn from yarnpgk.com...'
   run 'curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -'
   run 'echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list'
-  run 'sudo apt update && sudo apt install -y yarn'
+  run 'sudo apt-get update && sudo apt-get install -y yarn'
 end
 
-run 'yarn'
-run 'sudo yarn global add phantomjs-prebuilt'
-run 'sudo yarn global add bower'
-run 'sudo yarn global add gulp'
-run 'bower install'
+puts 'Install npm modules via `yarn`...'
+run 'yarn', exit_on_failure: true, silent: true
+run 'sudo yarn global add phantomjs-prebuilt' if `which phantomjs`.empty?
+run 'sudo yarn global add bower' if `which bower`.empty?
+run 'sudo yarn global add gulp' if `which gulp`.empty?
+run 'bower install', exit_on_failure: true
 
 # Rails and database config
 run 'cp config/application.example.yml config/application.yml' unless File.exist? 'config/application.yml'
@@ -55,7 +73,10 @@ run 'sudo mysql -e "CREATE DATABASE dashboard_testing DEFAULT CHARACTER SET utf8
 run 'sudo mysql -e "GRANT ALL ON dashboard.* TO \'dashboard\'"'
 run 'sudo mysql -e "GRANT ALL ON dashboard_testing.* TO \'dashboard\'"'
 
+run 'bundle exec rake db:migrate', exit_on_failure: true
+run 'bundle exec rake db:migrate RAILS_ENV=test', exit_on_failure: true
+
 # Build assets
-run 'gulp build'
+run 'gulp build', exit_on_failure: true
 
 puts 'ohai'
