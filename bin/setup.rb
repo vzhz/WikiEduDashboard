@@ -73,8 +73,8 @@ run 'sudo mysql -e "CREATE DATABASE dashboard_testing DEFAULT CHARACTER SET utf8
 run 'sudo mysql -e "GRANT ALL ON dashboard.* TO \'dashboard\'"'
 run 'sudo mysql -e "GRANT ALL ON dashboard_testing.* TO \'dashboard\'"'
 
-run 'rake db:migrate', exit_on_failure: true
-run 'rake db:migrate RAILS_ENV=test', exit_on_failure: true
+`bundle exec rake db:migrate`
+`bundle exec rake db:migrate RAILS_ENV=test`
 
 # Build assets
 run 'gulp build', exit_on_failure: true
