@@ -49,8 +49,11 @@ run 'bower install'
 run 'cp config/application.example.yml config/application.yml'
 run 'cp config/database.example.yml config/database.yml'
 
+run 'sudo mysql -e "CREATE USER \'dashboard\' IDENTIFIED BY \'password\';"'
 run 'sudo mysql -e "CREATE DATABASE dashboard DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"'
 run 'sudo mysql -e "CREATE DATABASE dashboard_testing DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"'
+run 'sudo mysql -e "GRANT ALL ON dashboard.* TO \'dashboard\'"'
+run 'sudo mysql -e "GRANT ALL ON dashboard_testing.* TO \'dashboard\'"'
 
 # Build assets
 run 'gulp build'
