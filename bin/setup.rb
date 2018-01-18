@@ -26,14 +26,14 @@ def run shell_command, exit_on_failure: false, silent: false
   return if exit_status.zero?
   puts "Error with command: #{shell_command}"
   return exit_status unless exit_on_failure
-  exit
+  exit exit_status
 end
 
 # Install dependencies
 
 if `which apt`.empty?
   puts 'Sorry, only Linux distros with `apt` are supported by this script.'
-  exit
+  exit 1
 end
 puts 'Installing required debian packages via `apt`...'
 run 'sudo apt-get update', silent: true, exit_on_failure: true
@@ -73,8 +73,8 @@ run 'sudo mysql -e "CREATE DATABASE dashboard_testing DEFAULT CHARACTER SET utf8
 run 'sudo mysql -e "GRANT ALL ON dashboard.* TO \'dashboard\'"'
 run 'sudo mysql -e "GRANT ALL ON dashboard_testing.* TO \'dashboard\'"'
 
-run 'bundle exec rake db:migrate', exit_on_failure: true
-run 'bundle exec rake db:migrate RAILS_ENV=test', exit_on_failure: true
+run 'rake db:migrate', exit_on_failure: true
+run 'rake db:migrate RAILS_ENV=test', exit_on_failure: true
 
 # Build assets
 run 'gulp build', exit_on_failure: true
