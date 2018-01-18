@@ -26,7 +26,8 @@ before_install:
 - node --version
 - yarn --version
 install:
-- ruby bin/setup.rb # main setup script
+- ruby bin/setup.rb # main setup script, will exit after installing gems
+- ruby bin/setup.rb # main setup script, finishes once gems are installed
 - yarn global add codeclimate-test-reporter
 - gem install rubocop
 

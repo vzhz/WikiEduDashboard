@@ -29,19 +29,16 @@ def run shell_command, exit_on_failure: false, silent: false
   exit exit_status
 end
 
-# Install dependencies
 
+# Install dependencies
 if `which apt`.empty?
   puts 'Sorry, only Linux distros with `apt` are supported by this script.'
   exit 1
 end
+
 puts 'Installing required debian packages via `apt`...'
 run 'sudo apt-get update', silent: true, exit_on_failure: true
 run 'sudo apt-get install -y default-libmysqlclient-dev pandoc curl r-base nodejs mariadb-server', silent: true
-
-puts 'Installing Ruby gems via `bundler`...'
-run 'gem install bundler' if `which bundler`.empty?
-run 'bundle install', exit_on_failure: true, silent: true
 
 if `which node`.empty? || `node -v`[1].to_i < 6
   puts 'Installing latest nodejs from nodesource.com...'
@@ -72,6 +69,15 @@ run 'sudo mysql -e "CREATE DATABASE dashboard DEFAULT CHARACTER SET utf8 DEFAULT
 run 'sudo mysql -e "CREATE DATABASE dashboard_testing DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"'
 run 'sudo mysql -e "GRANT ALL ON dashboard.* TO \'dashboard\'"'
 run 'sudo mysql -e "GRANT ALL ON dashboard_testing.* TO \'dashboard\'"'
+
+# Ruby gems
+unless `bundle check` == "The Gemfile's dependencies are satisfied"
+  puts 'Installing Ruby gems via `bundler`...'
+  run 'gem install bundler' if `which bundler`.empty?
+  run 'bundle install', exit_on_failure: true, silent: true
+  puts 'Ruby gem dependencies installed. Please rerun this script to continue.'
+  exit
+end
 
 `bundle exec rake db:migrate`
 `bundle exec rake db:migrate RAILS_ENV=test`
