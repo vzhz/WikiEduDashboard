@@ -43,7 +43,7 @@ puts 'Installing Ruby gems via `bundler`...'
 run 'gem install bundler' if `which bundler`.empty?
 run 'bundle install', exit_on_failure: true, silent: true
 
-if `nodejs -v`[1].to_i < 6
+if `which node`.empty? || `node -v`[1].to_i < 6
   puts 'Installing latest nodejs from nodesource.com...'
   run 'curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -'
   run 'sudo apt-get install -y nodejs'
