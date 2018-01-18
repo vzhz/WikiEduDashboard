@@ -46,8 +46,8 @@ run 'sudo yarn global add gulp'
 run 'bower install'
 
 # Rails and database config
-run 'cp config/application.example.yml config/application.yml'
-run 'cp config/database.example.yml config/database.yml'
+run 'cp config/application.example.yml config/application.yml' unless File.exist? 'config/application.yml'
+run 'cp config/database.example.yml config/database.yml' unless File.exist? 'config/database.yml'
 
 run 'sudo mysql -e "CREATE USER \'dashboard\' IDENTIFIED BY \'password\';"'
 run 'sudo mysql -e "CREATE DATABASE dashboard DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"'
