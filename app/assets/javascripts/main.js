@@ -1,5 +1,6 @@
 // Polyfills
 import "babel-polyfill";
+require('jquery-ujs');
 require('location-origin');
 require('trix');
 
